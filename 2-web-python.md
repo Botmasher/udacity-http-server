@@ -71,3 +71,41 @@
 
 
 ## 5. HTML and forms
+- query params often from user submitting html form (rather than entered directly into URI)
+- open `Lesson-2/2_HTMLForms/LoginPage.html` and start the **echo server** (3 above) listening on 8000
+	- open in browser through file system
+	- before pressing button to submit login run `EchoServer.py`
+	- the server logs a GET with status 200 and the query params
+	- after localhost response to GET query params, query is logged in the client
+- now open `SearchPage.html` in the same lesson 2 dir
+	- fill out the form and submit
+	- notice you're now searching on the remote server using these query parms!
+- Question: which piece of data tells the browser which server to submit the form to?
+	- Answer: the URI in the form `action` attribute!
+
+
+## 6. GET and POST
+- we've been using `GET`, what about `POST`?
+- two different HTTP verbs
+- altering or creating resources not done with `GET`
+- **idempotence**
+	- performing the action multiple times produces the same result (like running a search)
+	- `POST` requests are not idempotent
+	- hence browser mssg when reload on submit form to make sure the form is intentionally resubmitted
+- consider some simple idempotent statements:
+	- is `x += 0` idempotent?
+	- what about `x += 5`?
+	- `x = 5`?
+	- finally, `h = words['hi']` (a dict lookup)?
+- Be a server and receive POST request
+	- find the form in `Lesson-2/2_HTMLForms/PostForm.html`
+	- open in browser
+	- use `ncat` to listen on 9999
+	- now add data to and submit form
+	- Question: What's different about the HTTP request from the ones seen in this course so far?
+		- Answer: request line `POST / HTTP/1.1`, form data not in path, form data elsewhere in response
+- note that the data are sent in the request BODY
+- also note that the HTTP headers are case sensitive (can do `content-length`, `conTeNt-LeNgTH`, ...)
+
+
+## 7. A server for POST
