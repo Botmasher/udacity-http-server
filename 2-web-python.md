@@ -109,3 +109,101 @@
 
 
 ## 7. A server for POST
+- useful narratives: imagine your web app/service is already built; how will users interact with it?
+	- this helps imagine the cases you'll need to build for
+- **messageboard server** in upcoming exercises
+	- user opens main page in browser
+	- page displays message input form
+	- page displays previous messages
+	- submitting form sends request to server
+	- server stores submitted message
+	- server redisplays main page
+- to handle requests install the `requests` module: `pip3 install requests`
+- Question: which HTTP methods will the server need to use, and for what?
+	- Answer: GET for viewing messages, POST for submitting messages
+- Question: not use GET for submitting?
+	- Answer: GET will send the message, it will show up in user URL bar, then user might bookmark URL bar, allowing it to be resent every time user visits the main page
+- `do_POST` handler method
+	- handle a different action when a POST request comes in to server
+	- here, the server will see the POST request, send it to `do_POST`, which will store the message in a list, then return all messages seen so far
+	- note that unlike GET the POST user data is in the body
+	- `self.rfile.read` will read a request (as opposed to `wfile` for writing a response above)
+	- `.read` needs to be told how many bytes to read (length of request body)!
+	- our code can get length from `Content-length` header
+- Headers are strings
+	- `self.headers` is instance variable for accessing the HTTP headers
+	- case-insensitive header names (keys)
+	- values are strings (so `Content-length` may be "140" bytes rather than int 140)
+	- since headers might be missing (`KeyError`), instead of accessing ['key'] directly call `.get`
+```
+data = self.rfile.read(int(self.headers.get('Content-length', 0))).decode()
+```
+- now use `urllib.parse.parse_qs` to extract POST params
+- that should get you started with a `do_POST`!
+
+- Messageboard part 1
+	- starter code: `Lesson-2/3_MessageboardPartOne`
+	1. find POST request data length
+	2. read correct amount of request data
+	3. extract message field from request data
+	4. Run the .py server
+	5. Open the .html file in browser and submit
+	6. run the Python test with server running
+- Messageboard part 2
+	- if you don't want to start off with code from part 1, starter code: `4_MessageboardPartTwo`
+	1. Add string variable containing the HTML form from `Messageboard.html` (repeat the data)
+	2. Add `do_GET` method encoding and returning the html form
+	3. run the server and test in browser (port 8000)
+	4. run the Python test with server running
+- Question: What happens if you send requests to localhost with diff URI paths (e.g. `sockses/not-boxes`)?
+	- Answer: Nothing differs depending on the URI path. It's always that same form.
+
+
+## 8. Post-Redirect-Get
+- many ways to architect apps: single page, client logic, apps mostly on one server, apps across servers
+- common **PRG** (Post-Redirect-Get) pattern for server-side apps using forms
+	- client POSTs to server to create or update a resource
+	- server responsds with `303` (NOT with `200`)
+	- redirect causes client to GET the created/updated resource
+	- reason: use HTTP methods to accomplish a specific goal
+	- example: Wikipedia uses Post-Redirect-Get on page edit
+- Messageboard server goals:
+	1. go to localhost port in browser
+	2. browser GET request to server
+	3. server `200` with piece of HTML
+	4. user submits form in that HTML
+	5. browser sends form through POST to server
+	6. server adds/updates data and replies `303` and `Location: ` header
+	7. browser requests the initial (redirected) page through GET
+	8. server replies with `200` and piece of HTML
+- benefit: every page seen by user is result of GET, so can safely bookmark or revisit without resubmit
+- Messageboard part 3
+	- starter code: `5_MessageboardPartThree`
+	1. in `do_POST` send a `303` redirect back to the root page
+	2. in `do_GET` put together response data from form template and stored messages
+	3. run server and test in browser
+	4. run Python test with server running
+
+
+## 9. Making requests
+- nice servers... now write web clients
+- `requests` module has [good documentation](http://docs.python-requests.org/en/master/user/quickstart/)
+	- if you haven't yet make sure you pip install it
+	- Question: if Messageboard server runs on 8000 how would you send a get request using `requests`?
+		- Answer: `requests.get("http://localhost:8000")`
+- response objects
+	- returned objects look like `<Response [200]>`
+	- the type of returned objects is `<class 'requests.models.Response'>`
+	- Question: if you store a response object in `r`, how can you get the response body?
+		- Answer: `r.content` OR `r.text`, though content is for the literal binary response bytes!
+
+- error handling
+
+	- Question: what happens if you access bad URIs using `requests.get`? Try ones with a bad domain, and ones with a good domain but a bad path.
+		
+		- Answer: a nonexistent site returns Python error (can't save to variable), while nonexistent page on real site gives object with `.status_code == 404` and `.text` is the 404 page
+		
+		- More detail: some ISPs will try to nonstandardly redirect to advertising page (called DNS hijacking), but not standards-compliant DNS services like Goolge Public DNS
+
+
+## 10. Using a JSON API

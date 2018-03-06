@@ -9,7 +9,7 @@
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from urllib.parse import parse_qs
 
-memory = []
+memory = ['aaa']
 
 form = '''<!DOCTYPE html>
   <title>Message Board</title>
@@ -29,18 +29,24 @@ class MessageHandler(BaseHTTPRequestHandler):
         # How long was the message?
         length = int(self.headers.get('Content-length', 0))
 
-        # Read the correct amount of data from the request.
-        data = self.rfile.read(length).decode()
-        # Extract the "message" field from the request data.
-        message = parse_qs(data)["message"][0]
+        if length > 0:
 
-        # Escape HTML tags in the message so users can't break world+dog.
-        message = message.replace("<", "&lt;")
+            # Read the correct amount of data from the request.
+            data = self.rfile.read(length).decode()
 
-        # Store it in memory.
-        memory.append(message)
+            # Extract the "message" field from the request data.
+            message = parse_qs(data)["message"][0]
+
+            # Escape HTML tags in the message so users can't break world+dog.
+            message = message.replace("<", "&lt;")
+
+            # Store it in memory.
+            memory.append(message)
 
         # 1. Send a 303 redirect back to the root page.
+        self.send_response(303)
+        self.send_header('Location', '/')
+        self.end_headers()
 
     def do_GET(self):
         # First, send a 200 OK response.
@@ -51,8 +57,13 @@ class MessageHandler(BaseHTTPRequestHandler):
         self.end_headers()
 
         # 2. Put the response together out of the form and the stored messages.
+        messages = ""
+        for m in memory: messages += "<p>%s</p>\n" % m
+
+        response_body = form.replace("{}", messages)
 
         # 3. Send the response.
+        self.wfile.write(response_body.encode())
 
 if __name__ == '__main__':
     server_address = ('', 8000)
