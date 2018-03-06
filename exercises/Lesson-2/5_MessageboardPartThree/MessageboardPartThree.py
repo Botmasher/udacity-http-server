@@ -60,7 +60,7 @@ class MessageHandler(BaseHTTPRequestHandler):
         messages = ""
         for m in memory: messages += "<p>%s</p>\n" % m
 
-        response_body = form.replace("{}", messages)
+        response_body = form.format(messages)
 
         # 3. Send the response.
         self.wfile.write(response_body.encode())

@@ -207,3 +207,54 @@ data = self.rfile.read(int(self.headers.get('Content-length', 0))).decode()
 
 
 ## 10. Using a JSON API
+- as a dev you deal with data in many formats
+- very often you're writing for a system or using an API and don't get to choose the data format
+- JSON really common format for web APIs
+- Python code for dealing with JSON
+```
+res = requests.get("http://swap.co/api/people/1")
+res.json()['name']
+```
+- Question: What happens if you call `.json()` on non-JSON data (like Udacity homepage)?
+	- Answer: Python returns a `json.decoder.JSONDecodeError` from Python's `json` library.
+- Exercise: extract JSON response data
+	1. check out https://uinames.com
+	2. use that API to generate profiles e.g. http://uinames.com/api?ext&region=China
+	3. use query param `ext` (for showing more fields) and `region` (for country)
+	4. starter code: `Lesson-2/6_UsingJSON`
+	5. decode JSON data returned by `GET` request
+	6. print out the JSON fields in the format specified
+	7. run `UINames.py`
+	8. run the Python test
+
+
+## 11. The bookmark server
+- finally write code that accepts requests as a server, then makes requests as a client
+	- serves up HTML form via a `GET` request
+	- accepts form submission via `POST` request
+	- checks web addresses using `requests` to make sure they work
+	- uses the Post-Redirect-Get design pattern
+- Exercise **bookmark server**, a kind of URL shortener
+	- starter code: `7_BookmarkServer`
+	- `GET` request to `/` displays an HTML form with fields for a long URI and a short name
+	- submitting the form sends a `POST` request
+	- on `POST` the server looks for two form fields in request body
+		- if form fields exist it checks URI with `requests.get` to see if it returns a 200
+		- if form field(s) missing server returns 400 saying form field(s) missing
+		- if URI exists server stores dict entry mapping short name to long URI
+		- if URI exists server then returns HTML page with link to short version
+		- if URI does not exist server returns 404
+	- on `GET` a short URI, the server looks up to find long URI and serves a redirect
+- Steps
+	1. write `CheckURI` to take a URI and return `True` if fetch successful else `False`
+	2. write `do_GET` to send 303 to a known name
+	3. write `do_POST` to send 400 if the form fields are missing from POST
+	4. write `do_POST` to send 303 after saving a new URI
+	5. write `do_POST` to send 404 if URI fetch does not check out successfully
+
+
+## 12. You did it!
+- it took instructor a lot of tries to get that shortener right
+- it looks basic from browser but has lots going on
+- if you got yours working, feel proud!
+- get a cookie!... a WEB COOKIE in lesson 3 ;D
