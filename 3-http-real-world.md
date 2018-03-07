@@ -104,3 +104,95 @@ if __name__ == '__main__':
 
 
 ## 4. Cookies
+- headers for `'Set-Cookie'` and `'Cookie'` as particularly important for web apps
+	- store and transmit cookies
+	- cookie refresher: it's a piece of data that web server asks browser to store and send back
+	- "immensely important" for many apps
+	- e.g. stay logged in
+	- e.g. associate multiple queries c a single session
+	- e.g. track users for advertising
+- **Cookies**: 
+	- server asks browser to retain piece of info
+	- server requests browser to send it back when browser makes subsequent requests
+	- cookie has name and value
+	- cookie has rules specifying when it should be sent back
+- Why cookies?
+	- server can send clients unique cookie values to tell clients apart
+	- implement levels on top of HTTP request/response like a *login* or *session*
+	- track user activity for ads and marketing
+	- sometimes to store user prefs
+- How cookies happen
+	1. client sends request to server
+	2. server sends response with `'Set-Cookie'` header
+	3. header contains a cookie *name*, a cookie *value* and some *attributes*
+	4. when client makes subsequent requests, browser will send cookie back to server
+	5. server can update cookie
+	6. server can ask browser to expire cookie
+- Cookie fields in your browser
+	- check out a cookie in Chrome (look up how to find it if can't)
+	- cookie has *name* and *value* (like key value pair); notice no spaces or certain illegal characters
+	- value is the "real" data for the cookie such as logged-in user session
+	- cookie has *domain* and *path* (its *scope*)
+		- by default it's the hostname from the response URI
+		- server can set cookie on broader domain
+	- the *send for* and *accessible to script* flags are internally *Secure* and *HttpOnly*
+		- boolean flags
+		- setting Secure only allows cookie to send over HTTPS
+		- setting HttpOnly does not allow JavaScript code running on the page to access cookie
+	- Last fields deal with cookie lifetime
+		- creation time: when response happened that set the cookie
+		- expiration time: when server wants browser to stop saving cookie
+		- *Expires* and *Max-Age* are two ways server can set expiration time
+		- if no expiration field set, cookie expires when browser closes!
+- Using Cookies in Python
+	- formatting of `'Cookie'` and `'Set-Cookie'` headers is tricky so don't do it manually
+	- instead use Python's `http.cookies` module and the `SimpleCookies` class (dict with special behavior)
+```
+from http.cookies import SimpleCookie, CookieError
+
+out_cookie = SimpleCookie()
+out_cookie["dogname"] = "Spadges"
+out_cookie["dogname"]["max-age"] = 600
+out_cookie["dogname"]["httponly"] = True
+```
+	- then send cookies from request handler:
+```
+self.send_header("Set-Cookie", out_cookie["dogname"].OutputString())
+```  
+	- then read incoming cookies:
+```
+in_cookie = SimpleCookie(self.headers["Cookie"])
+in_data = in_cookie["dogname"].value
+```
+	- if request does not have valid cookie:
+		- `Cookie` header will raise `KeyError` if cookie does not exist
+		- `SimpleCookie` constructor will raise `http.cookies.CookieError` if cookie is invalid
+	- dealing with cookie security included modded cookies:
+		- users can modify cookies even though browsers make this difficult
+		- higher lvl kits like Flask and Rails sign cookies so modified ones aren't accepted
+		- high-security servers just use cookie to store session ID
+		- please `html.escape` special characters if displaying cookie data as HTML
+		- there's even more to say [about handling cookies](https://docs.python.org/3/library/http.cookies.html)
+- Exercise: server remembers you
+	- server asks your name
+	- server stores name in cookie on your browser
+	- server knows name on revisit
+	- starter code: `Lesson-3/2_CookieServer`
+	1. in `do_POST` set the cookie fields: value, domain (localhost), max-age
+	2. in `do_GET` extract and decode returned cookie value
+	3. run cookie server
+	4. navigate in browser to localhost server
+	5. run the Python test with the server live
+	6. check browser cookies for localhost domain to find the cookie
+- DNS domains and cookie security
+	- remember back to lesson 1, using `host` or `nslookup` to search for IP addresses of domains?
+	- domain names aren't just convenient and easier-to-remember 
+		- DNS domain links hostname to comp address
+		- also indicates that domain owner means for that comp to be treated as part of that domain
+	- so think about what someone could do if they convinced your browser their server was part of Facebook
+		- get you to request a Facebook url from their server instead of FB
+		- your browser could send facebook.com cookies to their server along with that request
+		- then they have access to your cookies and potentially your account!
+
+
+## 5. HTTPS for security
