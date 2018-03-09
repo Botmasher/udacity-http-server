@@ -196,3 +196,138 @@ in_data = in_cookie["dogname"].value
 
 
 ## 5. HTTPS for security
+- HTTPS does two important things for user:
+	1. protects data from network eavesdroppers
+	2. checks authenticity of site
+- HTTPS lets web dev offer those assurances
+- originally for pwds and other secure info
+- sites used on every connection as privacy became more important
+- the service you deployed to web already uses HTTPS
+- What it does
+	- just speaks HTTP over encrypted connection
+	- [TLS](https://en.wikipedia.org/wiki/Transport_Layer_Security) guarantees:
+		1. **privacy**: connection where everything is encrypted
+			- How? With public-key cryptography!
+		2. **authenticity**: browser can authenticate server (not an impostor)
+			- How? Cert authority only issues to someone running the domain.
+			- PLUS cert has metadata saying DNS domain it's good for
+			- if TLS domain metadata doesn't match DNS domain, browser rejects with warning
+				- NET::ERR_CERT_AUTHORITY_INVALID
+				- look up a pic to verify you've seen this warning before
+		3. **integrity**: data is protected, not modified or replaced
+			- How? With a message authentication code (MAC)!
+			- other end can check that message hasn't been damaged/altered
+	- TLS previously SSL
+- Inspecting
+	- open your service and click on little lock icon
+	- view TLS/SSL
+- Keys and certificates
+	- **private key**
+	- **public certificate**
+	- certificate is kind of notarized by a **Certificate Authority** (CA)
+	- Question: What organization was TLS certificate issued to? Who issued?
+		- Answer: Heroku, Inc. by DigiCert Inc
+- Question: Which cases does HTTPs not protect against?
+	- Answer: anything that's not your data *in transit*, like attackers breaking into Heroku's servers, attackers guessing passwords, malware taking screenshots of your browser, ...
+
+
+## 6. Beyond GET and POST
+- often apps have server side part exposing API and client side querying that API
+- not all API calls make sese as GET or POST
+	- GET for copy of a resource
+	- POST as something like form submission
+	- but other methods!
+- other methods require writing both server-side to accept and client-side JS to use
+- `PUT` for creating new resource
+	- server chooses how to implement
+	- e.g. storing file on disk
+	- e.g. adding record to db
+	- BUT not common for file uploads!
+	- successful response is status code `201 Created`
+	- after PUT, GET to the same URI should return the created resource
+	- Question: How would a file upload be done with just HTML on the client side?
+		- Answer: with POST
+- `DELETE` for removing resource from server
+	- after DELETE, GET to the same URI should return `404`
+	- of course until a new resource that could have the same name
+	- Question: What would you want client to do before allowing it to delete app resources?
+		- Aswer: Log in or authenticate!
+- `PATCH` for changes
+	- relatively new
+	- changes resource in well-defined way (analogy: like a git commit)
+	- HTTP doesn't specify a patch format
+		- could send diffs over a PATCH request
+		- there is a standardized JSON Patch format for changes to JSON data
+		- there's also another one called JSON Merge Patch
+		- look 'em up!
+- `HEAD`, `OPTIONS`, `TRACE`
+	- HTTP support for debugging and checking servers
+	- `HEAD`: only return headers
+	- `OPTIONS`: features supported by the servers
+	- `TRACE`: echo back what server got from client (often disabled for security)
+- Question: if in the protocol these methods are "verbs", what are the objects?
+	- URIs
+- Responsibility
+	- HTTP can't keep you from using these methods to do something difft
+	- web clients don't expect strange behavior 
+		- like GET shouldn't have side effects such as deleting a resource
+		- "famous case" where a 2006 site had edit/delete happen with GET, but an up-and-coming search engine's spider deleted the whole site
+- Read [the standards](https://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html)
+
+
+## 7. New developments in HTTP
+- 1991 HTTP/0.9 was really simple
+	- only GET
+	- all responses in HTML
+	- no headers
+- 1996 HTTP/1.0
+	- added headers, POST requests, status codes, Content-type
+	- then lots of features added by browsers and servers, incl Cookies!
+- 1999 & 2007 HTTP/1.1
+	- cache controls for better caching
+	- range requests (resuming downloads)
+	- transfer encodings (compression)
+	- persistent connections
+	- chunked messages
+	- Host Header (multiple sites, same IP)
+- end of 2016, 90% of web still using HTTP/1.1
+- 2012 HTTP/2 (esp for busy services involving many many requests)
+	- multiplexing (many requests at once)
+	- better compression
+	- server push
+- HTTP/2 changes
+	- started out as SPDY Google protocol work
+	- Python libs not yet mature
+	- Check if your browser supports HTTP/2: https://caniuse.com/#feat=http2
+	- Go example though at [Gophertiles](https://http2.golang.org/gophertiles)
+		- (or similar at https://http2.akamai.com/demo)
+	- Question: what's the loading diff btwn HTTP/1.1 and HTTP/2 at 1s latency?
+		- Answer: HUUUUUGE! Much slower for HTTP/1.1!
+- Why though? Exercise...
+	- HTTP browsers have long kept multiple cxns to server
+		- browser can fetch mutliple resources
+		- browser can do that in parallel without waiting
+	- a single HTTP/1.1 connection can only request a resource at a time
+	- since modern clients often do at most 6 cxns, that's 6 requests in flight at a time
+	- check out `Lesson-3/3_Parallelometer` server for an example
+- Multiplexing
+	- no limit to how many requests server can take at once
+- Server push
+	- Why wait for requests for resources server already knows you want?
+	- If you load `index.html` but server knows you need `styles.css`, it can send that, too.
+- Encryption
+	- designed around the time engineers wanted to encrypt all web traffic
+	- early HTTP/2 drafts required encryption for all sites using protocol, though backed down
+	- most browsers still do that anyway, only attempting HTTP/2 with a site using TLS!
+- Where (else) is HTTP/2 going? [Read more](https://http2.github.io/faq/)
+
+
+## 8. Keep Learning!
+- Congratulations!
+- You built knowledge of the protocols the web is built of
+- Now go build things!
+- Learn more:
+	https://developer.mozilla.org/en-US/docs/Web/HTTP
+	https://tools.ietf.org/html/rfc7230
+	https://letsencrypt.org/
+	https://chrome.google.com/webstore/detail/http-spy/agnoocojkneiphkobpcfoaenhpjnmifb?hl=en
