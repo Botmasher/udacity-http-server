@@ -155,24 +155,24 @@ out_cookie["dogname"] = "Spadges"
 out_cookie["dogname"]["max-age"] = 600
 out_cookie["dogname"]["httponly"] = True
 ```
-	- then send cookies from request handler:
+- then send cookies from request handler:
 ```
 self.send_header("Set-Cookie", out_cookie["dogname"].OutputString())
 ```  
-	- then read incoming cookies:
+- then read incoming cookies:
 ```
 in_cookie = SimpleCookie(self.headers["Cookie"])
 in_data = in_cookie["dogname"].value
 ```
-	- if request does not have valid cookie:
-		- `Cookie` header will raise `KeyError` if cookie does not exist
-		- `SimpleCookie` constructor will raise `http.cookies.CookieError` if cookie is invalid
-	- dealing with cookie security included modded cookies:
-		- users can modify cookies even though browsers make this difficult
-		- higher lvl kits like Flask and Rails sign cookies so modified ones aren't accepted
-		- high-security servers just use cookie to store session ID
-		- please `html.escape` special characters if displaying cookie data as HTML
-		- there's even more to say [about handling cookies](https://docs.python.org/3/library/http.cookies.html)
+- if request does not have valid cookie:
+	- `Cookie` header will raise `KeyError` if cookie does not exist
+	- `SimpleCookie` constructor will raise `http.cookies.CookieError` if cookie is invalid
+- dealing with cookie security included modded cookies:
+	- users can modify cookies even though browsers make this difficult
+	- higher lvl kits like Flask and Rails sign cookies so modified ones aren't accepted
+	- high-security servers just use cookie to store session ID
+	- please `html.escape` special characters if displaying cookie data as HTML
+	- there's even more to say [about handling cookies](https://docs.python.org/3/library/http.cookies.html)
 - Exercise: server remembers you
 	- server asks your name
 	- server stores name in cookie on your browser
@@ -327,7 +327,7 @@ in_data = in_cookie["dogname"].value
 - You built knowledge of the protocols the web is built of
 - Now go build things!
 - Learn more:
-	https://developer.mozilla.org/en-US/docs/Web/HTTP
-	https://tools.ietf.org/html/rfc7230
-	https://letsencrypt.org/
-	https://chrome.google.com/webstore/detail/http-spy/agnoocojkneiphkobpcfoaenhpjnmifb?hl=en
+	- https://developer.mozilla.org/en-US/docs/Web/HTTP
+	- https://tools.ietf.org/html/rfc7230
+	- https://letsencrypt.org/
+	- https://chrome.google.com/webstore/detail/http-spy/agnoocojkneiphkobpcfoaenhpjnmifb?hl=en
